@@ -6,6 +6,12 @@ output:
   pdf_document: default
 ---
 
+This is the information of the system used for this analysis:
+
+```{r cache = TRUE}
+sessionInfo()
+```
+
 The following package is used for this analysis:
 
 ```{r, warning=FALSE, message=FALSE}
@@ -20,7 +26,13 @@ library(gridExtra)
 In order to load the data from "activity.csv", read.csv will is used:
 
 ```{r cache = TRUE}
-data <- read.csv(bzfile("repdata-data-StormData.csv.bz2"))
+if(!file.exists("StormData.csv.bz2")){
+        download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", 
+                      "/Users/skom/Desktop/coursera/Rep_Research/RepData_PeerAssessment2/StormData.csv.bz2",
+                      method="curl")
+}
+
+data <- read.csv(bzfile("StormData.csv.bz2"))
 ```
 
 FATALITIES AND INJURIES:
@@ -33,7 +45,7 @@ ct_fat <- sqldf("select UPPER(EVTYPE) EVTYPE, SUM(FATALITIES) count from data
 
 ct_fat[grepl("AVAL",ct_fat$EVTYPE),1]<- "AVALANCHE"
 ct_fat[grepl("HEAT",ct_fat$EVTYPE),1]<-"HEAT/EXCESSIVE HEAT"
-ct_fat[grep("TORNADO",ct_fat$EVTYPE),1] <- "TORNADO"
+ct_fat[grepl("TORNADO",ct_fat$EVTYPE),1] <- "TORNADO"
 ct_fat[grepl("TSTM|THUNDERST",ct_fat$EVTYPE),1] <- "THUNDERSTORM WIND"
 ct_fat[grepl("FLOOD",ct_fat$EVTYPE),1] <- "FLOOD"
 ct_fat[grepl("LIGHTNING",ct_fat$EVTYPE),1]<-"LIGHTNING"
@@ -54,7 +66,7 @@ ct_inj <- sqldf("select UPPER(EVTYPE) EVTYPE, SUM(INJURIES) count from data
 
 ct_inj[grepl("AVAL",ct_inj$EVTYPE),1]<- "AVALANCHE"
 ct_inj[grepl("HEAT",ct_inj$EVTYPE),1]<-"HEAT/EXCESSIVE HEAT"
-ct_inj[grep("TORNADO",ct_inj$EVTYPE),1] <- "TORNADO"
+ct_inj[grepl("TORNADO",ct_inj$EVTYPE),1] <- "TORNADO"
 ct_inj[grepl("TSTM|THUNDERST",ct_inj$EVTYPE),1] <- "THUNDERSTORM WIND"
 ct_inj[grepl("FLOOD",ct_inj$EVTYPE),1] <- "FLOOD"
 ct_inj[grepl("LIGHTNING",ct_inj$EVTYPE),1]<-"LIGHTNING"
@@ -122,7 +134,7 @@ DMG_CROP$CROPDMGVAL <- DMG_CROP$CROPDMG*DMG_CROP$CROPDMGEXP
 
 DMG_CROP[grepl("AVAL",DMG_CROP$EVTYPE),1]<- "AVALANCHE"
 DMG_CROP[grepl("HEAT",DMG_CROP$EVTYPE),1]<-"HEAT/EXCESSIVE HEAT"
-DMG_CROP[grep("TORNADO",DMG_CROP$EVTYPE),1] <- "TORNADO"
+DMG_CROP[grepl("TORNADO",DMG_CROP$EVTYPE),1] <- "TORNADO"
 DMG_CROP[grepl("TSTM|THUNDERST",DMG_CROP$EVTYPE),1] <- "THUNDERSTORM WIND"
 DMG_CROP[grepl("FLOOD",DMG_CROP$EVTYPE),1] <- "FLOOD"
 DMG_CROP[grepl("LIGHTNING",DMG_CROP$EVTYPE),1]<-"LIGHTNING"

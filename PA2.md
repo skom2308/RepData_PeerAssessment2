@@ -1,5 +1,36 @@
 # Reproducible Research: Peer Assessment 2
 
+This is the information of the system used for this analysis:
+
+
+```r
+sessionInfo()
+```
+
+```
+## R version 3.2.0 (2015-04-16)
+## Platform: x86_64-apple-darwin13.4.0 (64-bit)
+## Running under: OS X 10.10.3 (Yosemite)
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+## [1] gridExtra_0.9.1 sqldf_0.4-10    RSQLite_1.0.0   DBI_0.3.1      
+## [5] gsubfn_0.6-6    proto_0.3-10    ggplot2_1.0.1  
+## 
+## loaded via a namespace (and not attached):
+##  [1] Rcpp_0.11.6      knitr_1.10.5     magrittr_1.5     MASS_7.3-40     
+##  [5] munsell_0.4.2    colorspace_1.2-6 stringr_1.0.0    plyr_1.8.2      
+##  [9] tools_3.2.0      gtable_0.1.2     htmltools_0.2.6  yaml_2.1.13     
+## [13] digest_0.6.8     reshape2_1.4.1   formatR_1.2      evaluate_0.7    
+## [17] rmarkdown_0.6.1  stringi_0.4-1    scales_0.2.4     chron_2.3-45
+```
+
 The following package is used for this analysis:
 
 
@@ -16,7 +47,13 @@ In order to load the data from "activity.csv", read.csv will is used:
 
 
 ```r
-data <- read.csv(bzfile("repdata-data-StormData.csv.bz2"))
+if(!file.exists("StormData.csv.bz2")){
+        download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", 
+                      "/Users/skom/Desktop/coursera/Rep_Research/RepData_PeerAssessment2/StormData.csv.bz2",
+                      method="curl")
+}
+
+data <- read.csv(bzfile("StormData.csv.bz2"))
 ```
 
 FATALITIES AND INJURIES:
@@ -30,7 +67,7 @@ ct_fat <- sqldf("select UPPER(EVTYPE) EVTYPE, SUM(FATALITIES) count from data
 
 ct_fat[grepl("AVAL",ct_fat$EVTYPE),1]<- "AVALANCHE"
 ct_fat[grepl("HEAT",ct_fat$EVTYPE),1]<-"HEAT/EXCESSIVE HEAT"
-ct_fat[grep("TORNADO",ct_fat$EVTYPE),1] <- "TORNADO"
+ct_fat[grepl("TORNADO",ct_fat$EVTYPE),1] <- "TORNADO"
 ct_fat[grepl("TSTM|THUNDERST",ct_fat$EVTYPE),1] <- "THUNDERSTORM WIND"
 ct_fat[grepl("FLOOD",ct_fat$EVTYPE),1] <- "FLOOD"
 ct_fat[grepl("LIGHTNING",ct_fat$EVTYPE),1]<-"LIGHTNING"
@@ -51,7 +88,7 @@ ct_inj <- sqldf("select UPPER(EVTYPE) EVTYPE, SUM(INJURIES) count from data
 
 ct_inj[grepl("AVAL",ct_inj$EVTYPE),1]<- "AVALANCHE"
 ct_inj[grepl("HEAT",ct_inj$EVTYPE),1]<-"HEAT/EXCESSIVE HEAT"
-ct_inj[grep("TORNADO",ct_inj$EVTYPE),1] <- "TORNADO"
+ct_inj[grepl("TORNADO",ct_inj$EVTYPE),1] <- "TORNADO"
 ct_inj[grepl("TSTM|THUNDERST",ct_inj$EVTYPE),1] <- "THUNDERSTORM WIND"
 ct_inj[grepl("FLOOD",ct_inj$EVTYPE),1] <- "FLOOD"
 ct_inj[grepl("LIGHTNING",ct_inj$EVTYPE),1]<-"LIGHTNING"
@@ -119,7 +156,7 @@ DMG_CROP$CROPDMGVAL <- DMG_CROP$CROPDMG*DMG_CROP$CROPDMGEXP
 
 DMG_CROP[grepl("AVAL",DMG_CROP$EVTYPE),1]<- "AVALANCHE"
 DMG_CROP[grepl("HEAT",DMG_CROP$EVTYPE),1]<-"HEAT/EXCESSIVE HEAT"
-DMG_CROP[grep("TORNADO",DMG_CROP$EVTYPE),1] <- "TORNADO"
+DMG_CROP[grepl("TORNADO",DMG_CROP$EVTYPE),1] <- "TORNADO"
 DMG_CROP[grepl("TSTM|THUNDERST",DMG_CROP$EVTYPE),1] <- "THUNDERSTORM WIND"
 DMG_CROP[grepl("FLOOD",DMG_CROP$EVTYPE),1] <- "FLOOD"
 DMG_CROP[grepl("LIGHTNING",DMG_CROP$EVTYPE),1]<-"LIGHTNING"
@@ -151,7 +188,7 @@ p2 <- ggplot(data=TOP10_INJURIES, aes(x=reorder(EVENT_TYPE,INJURIES), y=INJURIES
 grid.arrange(p1,p2, main = "Total Fatalities and Total Injuries by Event Type")
 ```
 
-![](PA2_files/figure-html/unnamed-chunk-4-1.png) 
+![](PA2_files/figure-html/unnamed-chunk-5-1.png) 
 
 Plots 2
 
@@ -169,7 +206,7 @@ p4 <- ggplot(data=TOP10_CROPVAL, aes(x=reorder(EVENT_TYPE,TOTAL), y=TOTAL/1e+09,
 grid.arrange(p3,p4, main = "Total Property Damage and Total Crops Damage by Event Type")
 ```
 
-![](PA2_files/figure-html/unnamed-chunk-5-1.png) 
+![](PA2_files/figure-html/unnamed-chunk-6-1.png) 
 
 
 

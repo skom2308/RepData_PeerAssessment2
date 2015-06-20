@@ -64,6 +64,29 @@ img {
 </div>
 
 
+<p>This is the information of the system used for this analysis:</p>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>## R version 3.2.0 (2015-04-16)
+## Platform: x86_64-apple-darwin13.4.0 (64-bit)
+## Running under: OS X 10.10.3 (Yosemite)
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+## [1] gridExtra_0.9.1 sqldf_0.4-10    RSQLite_1.0.0   DBI_0.3.1      
+## [5] gsubfn_0.6-6    proto_0.3-10    ggplot2_1.0.1  
+## 
+## loaded via a namespace (and not attached):
+##  [1] Rcpp_0.11.6      knitr_1.10.5     magrittr_1.5     MASS_7.3-40     
+##  [5] munsell_0.4.2    colorspace_1.2-6 stringr_1.0.0    plyr_1.8.2      
+##  [9] tools_3.2.0      gtable_0.1.2     htmltools_0.2.6  yaml_2.1.13     
+## [13] digest_0.6.8     reshape2_1.4.1   formatR_1.2      evaluate_0.7    
+## [17] rmarkdown_0.6.1  stringi_0.4-1    scales_0.2.4     chron_2.3-45</code></pre>
 <p>The following package is used for this analysis:</p>
 <pre class="r"><code>library(ggplot2)
 library(sqldf)
@@ -72,7 +95,13 @@ library(gridExtra)</code></pre>
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
 <p>In order to load the data from “activity.csv”, read.csv will is used:</p>
-<pre class="r"><code>data &lt;- read.csv(bzfile(&quot;repdata-data-StormData.csv.bz2&quot;))</code></pre>
+<pre class="r"><code>if(!file.exists(&quot;StormData.csv.bz2&quot;)){
+        download.file(&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2&quot;, 
+                      &quot;/Users/skom/Desktop/coursera/Rep_Research/RepData_PeerAssessment2/StormData.csv.bz2&quot;,
+                      method=&quot;curl&quot;)
+}
+
+data &lt;- read.csv(bzfile(&quot;StormData.csv.bz2&quot;))</code></pre>
 <p>FATALITIES AND INJURIES:</p>
 <pre class="r"><code># Fatalities
 ct_fat &lt;- sqldf(&quot;select UPPER(EVTYPE) EVTYPE, SUM(FATALITIES) count from data 
@@ -81,7 +110,7 @@ ct_fat &lt;- sqldf(&quot;select UPPER(EVTYPE) EVTYPE, SUM(FATALITIES) count from
 
 ct_fat[grepl(&quot;AVAL&quot;,ct_fat$EVTYPE),1]&lt;- &quot;AVALANCHE&quot;
 ct_fat[grepl(&quot;HEAT&quot;,ct_fat$EVTYPE),1]&lt;-&quot;HEAT/EXCESSIVE HEAT&quot;
-ct_fat[grep(&quot;TORNADO&quot;,ct_fat$EVTYPE),1] &lt;- &quot;TORNADO&quot;
+ct_fat[grepl(&quot;TORNADO&quot;,ct_fat$EVTYPE),1] &lt;- &quot;TORNADO&quot;
 ct_fat[grepl(&quot;TSTM|THUNDERST&quot;,ct_fat$EVTYPE),1] &lt;- &quot;THUNDERSTORM WIND&quot;
 ct_fat[grepl(&quot;FLOOD&quot;,ct_fat$EVTYPE),1] &lt;- &quot;FLOOD&quot;
 ct_fat[grepl(&quot;LIGHTNING&quot;,ct_fat$EVTYPE),1]&lt;-&quot;LIGHTNING&quot;
@@ -102,7 +131,7 @@ ct_inj &lt;- sqldf(&quot;select UPPER(EVTYPE) EVTYPE, SUM(INJURIES) count from d
 
 ct_inj[grepl(&quot;AVAL&quot;,ct_inj$EVTYPE),1]&lt;- &quot;AVALANCHE&quot;
 ct_inj[grepl(&quot;HEAT&quot;,ct_inj$EVTYPE),1]&lt;-&quot;HEAT/EXCESSIVE HEAT&quot;
-ct_inj[grep(&quot;TORNADO&quot;,ct_inj$EVTYPE),1] &lt;- &quot;TORNADO&quot;
+ct_inj[grepl(&quot;TORNADO&quot;,ct_inj$EVTYPE),1] &lt;- &quot;TORNADO&quot;
 ct_inj[grepl(&quot;TSTM|THUNDERST&quot;,ct_inj$EVTYPE),1] &lt;- &quot;THUNDERSTORM WIND&quot;
 ct_inj[grepl(&quot;FLOOD&quot;,ct_inj$EVTYPE),1] &lt;- &quot;FLOOD&quot;
 ct_inj[grepl(&quot;LIGHTNING&quot;,ct_inj$EVTYPE),1]&lt;-&quot;LIGHTNING&quot;
@@ -170,7 +199,7 @@ DMG_CROP$CROPDMGVAL &lt;- DMG_CROP$CROPDMG*DMG_CROP$CROPDMGEXP
 
 DMG_CROP[grepl(&quot;AVAL&quot;,DMG_CROP$EVTYPE),1]&lt;- &quot;AVALANCHE&quot;
 DMG_CROP[grepl(&quot;HEAT&quot;,DMG_CROP$EVTYPE),1]&lt;-&quot;HEAT/EXCESSIVE HEAT&quot;
-DMG_CROP[grep(&quot;TORNADO&quot;,DMG_CROP$EVTYPE),1] &lt;- &quot;TORNADO&quot;
+DMG_CROP[grepl(&quot;TORNADO&quot;,DMG_CROP$EVTYPE),1] &lt;- &quot;TORNADO&quot;
 DMG_CROP[grepl(&quot;TSTM|THUNDERST&quot;,DMG_CROP$EVTYPE),1] &lt;- &quot;THUNDERSTORM WIND&quot;
 DMG_CROP[grepl(&quot;FLOOD&quot;,DMG_CROP$EVTYPE),1] &lt;- &quot;FLOOD&quot;
 DMG_CROP[grepl(&quot;LIGHTNING&quot;,DMG_CROP$EVTYPE),1]&lt;-&quot;LIGHTNING&quot;
