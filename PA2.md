@@ -1,6 +1,12 @@
 # Reproducible Research: Peer Assessment 2
 
-This is the information of the system used for this analysis:
+# Storms and Severe Weather Events in United States: Human and Economic impacts.
+
+##Synopsis
+Storms and severe weather events cause public health and economic problems for communities and municipalities. Severe events can result in fatalities, injuries, and property damage and even damages to crops. For these reason preventing such outcomes is a key concern. In this study we will study the "U.S. National Oceanic and Atmospheric Administration's" (NOAA) storm database in order to determine which events are most harmful with respect to human casualities and material damage.
+
+###System information (Platform, OS, Version of R and R Packages used)
+In case you would like to reproduce this analysis, this is the information of the system that was used:
 
 
 ```r
@@ -31,7 +37,7 @@ sessionInfo()
 ## [17] rmarkdown_0.6.1  stringi_0.4-1    scales_0.2.4     chron_2.3-45
 ```
 
-The following package is used for this analysis:
+The following packages are used for this analysis:
 
 
 ```r
@@ -41,9 +47,11 @@ library(grid)
 library(gridExtra)
 ```
 
-## Loading and preprocessing the data
+## Data Processing
 
-In order to load the data from "activity.csv", read.csv will is used:
+The data for this analysis comes in the form of a comma-separated-value (csv) file compressed via the bzip2 algorithm to reduce its size. The file can download the file can be downloaded from this [link.](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2). The events in the database start in the year 1950 and end in November 2011. 
+
+The following R code can be used to download the raw data and load it in R for further processing.
 
 
 ```r
@@ -56,11 +64,19 @@ if(!file.exists("StormData.csv.bz2")){
 data <- read.csv(bzfile("StormData.csv.bz2"))
 ```
 
-FATALITIES AND INJURIES:
+Based on the raw data, four datasets were generated to analyze the impacts of the different events in relation to:
+        
+1. Fatalities
+2. Injuries
+3. Propery Damage
+4. Crop Damage
+
+### 1. Fatalities
+For this part of the analysis, column FATALITIES was aggregated in relation to EVTYPE. After this initial aggregation EVTYPE was tidied up and FATALITIES were aggregated once again based on these "Cleaned" event types. Top 10 events are used for the analysis.
+
 
 
 ```r
-# Fatalities
 ct_fat <- sqldf("select UPPER(EVTYPE) EVTYPE, SUM(FATALITIES) count from data 
                 where FATALITIES>0 group by UPPER(EVTYPE) 
                 order by 2 desc")
@@ -80,8 +96,13 @@ FATALITIES <- sqldf("select UPPER(EVTYPE) EVENT_TYPE, sum(count) FATALITIES from
                     group by UPPER(EVTYPE) 
                     order by 2 desc")
 TOP10_FATALITIES <- head(FATALITIES,10)
+```
 
-# Injuries
+### 2. Injuries
+For this part of the analysis, column INJURIES was aggregated in relation to EVTYPE. After this initial aggregation EVTYPE was tidied up and INJURIES were aggregated once again based on these "Cleaned" event types. Top 10 events are used for the analysis.
+
+
+```r
 ct_inj <- sqldf("select UPPER(EVTYPE) EVTYPE, SUM(INJURIES) count from data
                 where INJURIES>0 group by UPPER(EVTYPE) 
                 order by 2 desc")
@@ -100,12 +121,26 @@ ct_inj[grepl("EXTREME COLD",ct_inj$EVTYPE),1] <-"EXTREME COLD"
 INJURIES <- sqldf("select UPPER(EVTYPE) EVENT_TYPE, sum(count) INJURIES from ct_inj 
                   group by UPPER(EVTYPE) order by 2 desc")
 TOP10_INJURIES <- head(INJURIES,10)
+```
 
+### 3. Property Damage
+For this part of the analysis, columns EVTYPE, PROPDMG and PROPDMGEXP are used (we keep values from the raw data that have PROPDMG>0. PROPDMGEXP needed major cleaning as it represented exponents in the form of a number (for example 3 meaning 1e+03) and letters (for example K or k also meaning 1e+03). After the relevant cleaning is down PROPDMG and PROPDMGEXP are multiplied and aggregated by EVTYPE. After this initial aggregation EVTYPE was tidied up and Property Damage was aggregated once again based on these "Cleaned" event types. Top 10 events are used for the analysis.
+
+
+
+```r
 # Property Damage
 
 DMG_PROP <- sqldf("select UPPER(EVTYPE) EVTYPE, PROPDMG, UPPER(PROPDMGEXP) PROPDMGEXP from data where PROPDMG > 0")
-#unique(DMG_PROP$PROPDMGEXP)
 DMG_PROP$PROPDMGEXP <- as.character(DMG_PROP$PROPDMGEXP)
+unique(DMG_PROP$PROPDMGEXP)
+```
+
+```
+##  [1] "K" "M" "B" "+" "0" ""  "5" "6" "4" "H" "2" "7" "3" "-"
+```
+
+```r
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "H"] <- 100
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "K"] <- 1000
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "M"] <- 1000000
@@ -118,7 +153,7 @@ DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "3"] <- 1e+03
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "2"] <- 1e+02
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "0"] <- 1
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "-"] <- 0
-DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == ""] <- 0
+DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == ""] <- 1
 DMG_PROP$PROPDMGEXP[DMG_PROP$PROPDMGEXP == "+"] <- 0
 DMG_PROP$PROPDMGEXP <- as.numeric(DMG_PROP$PROPDMGEXP)
 DMG_PROP$PROPDMGVAL <- DMG_PROP$PROPDMG*DMG_PROP$PROPDMGEXP
@@ -139,17 +174,28 @@ DMG_PROP[grepl("STRONG",DMG_PROP$EVTYPE),1] <-"STRONG WIND"
 
 PROPVAL <- sqldf("select UPPER(EVTYPE) EVENT_TYPE, sum(PROPDMGVAL) TOTAL from DMG_PROP group by UPPER(EVTYPE) order by 2 desc")
 TOP10_PROPVAL <- head(PROPVAL,10)
+```
 
-# Crops Damage
+### 4. Crop Damage
+For this part of the analysis, columns EVTYPE, CROPDMG and CROPDMGEXP are used (we keep values from the raw data that have CROPDMG>0. CROPDMGEXP needed major cleaning as it represented exponents in the form of a number (for example 3 meaning 1e+03) and letters (for example K or k also meaning 1e+03). After the relevant cleaning is done CROPDMG and CROPDMGEXP are multiplied and aggregated by EVTYPE. After this initial aggregation EVTYPE was tidied up and Crop Damage was aggregated once again based on these "Cleaned" event types. Top 10 events are used for the analysis.
 
+
+```r
 DMG_CROP <- sqldf("select UPPER(EVTYPE) EVTYPE, CROPDMG, UPPER(CROPDMGEXP) CROPDMGEXP from data where CROPDMG > 0")
-#unique(DMG_CROP$CROPDMGEXP)
 DMG_CROP$CROPDMGEXP <- as.character(DMG_CROP$CROPDMGEXP)
+unique(DMG_CROP$CROPDMGEXP)
+```
+
+```
+## [1] "M" "K" "B" "0" ""
+```
+
+```r
 DMG_CROP$CROPDMGEXP[DMG_CROP$CROPDMGEXP == "K"] <- 1000
 DMG_CROP$CROPDMGEXP[DMG_CROP$CROPDMGEXP == "M"] <- 1000000
 DMG_CROP$CROPDMGEXP[DMG_CROP$CROPDMGEXP == "B"] <- 1000000000
 DMG_CROP$CROPDMGEXP[DMG_CROP$CROPDMGEXP == "0"] <- 1
-DMG_CROP$CROPDMGEXP[DMG_CROP$CROPDMGEXP == ""] <- 0
+DMG_CROP$CROPDMGEXP[DMG_CROP$CROPDMGEXP == ""] <- 1
 DMG_CROP$CROPDMGEXP <- as.numeric(DMG_CROP$CROPDMGEXP)
 DMG_CROP$CROPDMGVAL <- DMG_CROP$CROPDMG*DMG_CROP$CROPDMGEXP
 
@@ -172,7 +218,8 @@ TOP10_CROPVAL <- head(CROPVAL,10)
 ```
 
 
-Plots 1:
+##Results
+The following panel plot shows the top 10 weather events responsible for fatalities and the top 10 weather events responsible for injuries.
 
 
 ```r
@@ -188,9 +235,11 @@ p2 <- ggplot(data=TOP10_INJURIES, aes(x=reorder(EVENT_TYPE,INJURIES), y=INJURIES
 grid.arrange(p1,p2, main = "Total Fatalities and Total Injuries by Event Type")
 ```
 
-![](PA2_files/figure-html/unnamed-chunk-5-1.png) 
+![](PA2_files/figure-html/unnamed-chunk-8-1.png) 
 
-Plots 2
+It can be observed that Tornados are the most harmful to population health both for Fatalities and Injuries.
+
+The following panel plot shows the top 10 weather events responsible for property damage and the top 10 weather events responsible for crop damage.
 
 
 ```r
@@ -206,8 +255,7 @@ p4 <- ggplot(data=TOP10_CROPVAL, aes(x=reorder(EVENT_TYPE,TOTAL), y=TOTAL/1e+09,
 grid.arrange(p3,p4, main = "Total Property Damage and Total Crops Damage by Event Type")
 ```
 
-![](PA2_files/figure-html/unnamed-chunk-6-1.png) 
+![](PA2_files/figure-html/unnamed-chunk-9-1.png) 
 
+It can be observed that Floods cause the most Property Damage and Droughts the most Crops Damage.
 
-
-The End
